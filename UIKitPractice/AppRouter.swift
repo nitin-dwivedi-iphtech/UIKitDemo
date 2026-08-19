@@ -13,7 +13,7 @@ enum AppRouter {
         case main
     }
     
-    static func setRootViewController(to destination: Destination) {
+    static func setRootViewController(to destination: Destination, appState: AppState) {
         guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let sceneDelegate = scene.delegate as? SceneDelegate,
               let window = sceneDelegate.window else {
@@ -25,6 +25,19 @@ enum AppRouter {
         
         guard let targetVC = storyBoard.instantiateInitialViewController() else {
             return
+        }
+
+        let rootVC: UIViewController
+        if let nav = targetVC as? UINavigationController {
+            rootVC = nav.viewControllers.first ?? targetVC
+        } else {
+            rootVC = targetVC
+        }
+
+        if let authVC = rootVC as? AuthController {
+            authVC.config(appState: appState)
+        } else if let homeVC = rootVC as? HomeController {
+            homeVC.config(appState: appState)
         }
         
         UIView.transition(

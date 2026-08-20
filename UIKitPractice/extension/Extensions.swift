@@ -7,6 +7,8 @@
 import CoreData
 
 extension NSManagedObjectContext {
+    
+    @discardableResult
     func saveData() -> Bool{
         do {
             try self.save()

@@ -17,6 +17,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
      
         let window = UIWindow(windowScene: windowScene)
         self.window = window
+        window.tintColor = UIColor(named: "ThemeAccent") ?? UIColor(red: 0.745, green: 0.071, blue: 0.235, alpha: 1.0)
         window.makeKeyAndVisible()
         
         AppRouter.setRootViewController(to: appState.isLoggedIn ? .main : .auth, appState: appState)

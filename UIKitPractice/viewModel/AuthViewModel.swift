@@ -37,7 +37,7 @@ class AuthViewModel: ObservableObject {
         user.name = name
         user.email = email
         user.password = pass
-        let _ = context.saveData()
+        context.saveData()
         appState.isLoggedIn = true
         appState.user = user
     }

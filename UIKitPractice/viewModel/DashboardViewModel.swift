@@ -29,6 +29,32 @@ class DashboardViewModel: ObservableObject {
         }
     }
     
+    func createTodo(desc: String) {
+        guard let context = self.context else { return }
+        let todo = Todo(context: context)
+        todo.id = UUID().uuidString
+        todo.desc = desc
+        todo.status = StatusEnum.pending.rawValue
+        context.saveData()
+    }
+    
+    func saveTodo() {
+        context?.saveData()
+    }
+    
+    func toggleStatus(for todo: Todo) {
+        let isCompleted = StatusEnum.from(todo.status) == .completed
+        todo.status = isCompleted ? StatusEnum.pending.rawValue : StatusEnum.completed.rawValue
+        context?.saveData()
+    }
+    
+    func deleteTodo(at index: Int) {
+        guard let context, let todo = todo?[index] else { return }
+        context.delete(todo)
+        context.saveData()
+        self.todo?.remove(at: index)
+    }
+    
     private func fetchUser() {
         do {
             let request = Users.fetchRequest()
@@ -42,5 +68,5 @@ class DashboardViewModel: ObservableObject {
         appState.isLoggedIn = false
         appState.user = nil
     }
-  
+    
 }

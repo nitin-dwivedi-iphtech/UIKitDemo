@@ -13,6 +13,6 @@
         <attribute name="id" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="password" optional="YES" attributeType="String"/>
-        <relationship name="user_todo_relation" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="Todo" inverseName="todo_user_relation" inverseEntity="Todo"/>
+        <relationship name="user_todo_relation" optional="YES" toMany="YES" deletionRule="Nullify" destinationEntity="Todo" inverseName="todo_user_relation" inverseEntity="Todo"/>
     </entity>
 </model>

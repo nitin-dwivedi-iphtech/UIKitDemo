@@ -13,21 +13,26 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
     @IBOutlet weak var tableView: UITableView!
     @IBOutlet weak var userNameLabel: UILabel!
     
-    private var viewModel :DashboardViewModel!
+    @IBOutlet weak var categoryPicker: UISegmentedControl!
+    
+    private var viewModel: DashboardViewModel!
     private var appState: AppState!
     private var cancellable = Set<AnyCancellable>()
     
-    func config(appState:AppState) {
+    func config(appState: AppState) {
         self.viewModel = DashboardViewModel(appState: appState)
         self.appState = appState
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         bindViewModel()
         tableView.dataSource = self
         tableView.delegate = self
         tableView.refreshControl = setUpRefreshController()
+        setupSegmentControl()
         viewModel.$todo
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
@@ -36,9 +41,27 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
             .store(in: &cancellable)
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        viewModel.fetchTodo()
+    // MARK: Segment Control
+    
+    func setupSegmentControl() {
+        categoryPicker.removeAllSegments()
+        for (index, section) in TodoSections.allCases.enumerated() {
+            categoryPicker.insertSegment(withTitle: section.rawValue, at: index, animated: true)
+        }
+        categoryPicker.selectedSegmentIndex = 0
+        categoryPicker.addTarget(self, action: #selector(categoryChnaged(_:)), for: .valueChanged)
     }
+    
+    @objc func categoryChnaged(_ sender:UISegmentedControl) {
+        let selectedIndex = categoryPicker.selectedSegmentIndex
+        guard selectedIndex < TodoSections.allCases.count else { return }
+        
+        let selectedSection = TodoSections.allCases[selectedIndex]
+        viewModel.selectedCategory = selectedSection
+        viewModel.selectCategory(selectedSection)
+    }
+    
+    // MARK: Refresh
     
     private func setUpRefreshController() -> UIRefreshControl {
         let refreshControl = UIRefreshControl()
@@ -51,6 +74,10 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
     @objc private func refreshTodo() {
         viewModel.fetchTodo()
         tableView.refreshControl?.endRefreshing()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        viewModel.fetchTodo()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -68,6 +95,7 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
         }
     }
     
+    // MARK: TableView DataSource
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         viewModel.todo?.count ?? 0
@@ -86,6 +114,8 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
         tableView.reloadRows(at: [indexPath], with: .automatic)
     }
     
+    // MARK: Swipe Actions
+    
     func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard let task = viewModel.todo?[indexPath.row] else { return nil }
         
@@ -97,7 +127,7 @@ class HomeController: UIViewController, UITableViewDataSource, UITableViewDelega
         return UISwipeActionsConfiguration(actions: [editAction])
     }
     
-func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
         guard let task = viewModel.todo?[indexPath.row] else { return nil }
         
         let isCompleted = StatusEnum.from(task.status) == .completed
@@ -125,6 +155,8 @@ func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRow
         }
     }
     
+    // MARK: Edit Screen
+    
     private func openEditScreen(for task: Todo) {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         guard let addVC = storyboard.instantiateViewController(withIdentifier: "AddTodoController") as? AddTodoController else { return }
@@ -134,6 +166,8 @@ func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRow
         addVC.onSave = { [weak self] in self?.viewModel.fetchTodo() }
         present(addVC, animated: true)
     }
+    
+    // MARK: Binding
     
     private func bindViewModel() {
         appState.$user

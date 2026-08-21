@@ -11,15 +11,18 @@ import CoreData
 class AddTodoController: UIViewController {
     
     @IBOutlet weak var descTextField: UITextField!
-    
     @IBOutlet weak var subHeadingLabel: UILabel!
     @IBOutlet weak var headingLabel: UILabel!
-    
     @IBOutlet weak var actionbutton: UIButton!
+    
+    
+    @IBOutlet weak var categoryPicker: UIButton!
     
     private var viewModel: DashboardViewModel!
     var todoToEdit: Todo?
     var onSave: (() -> Void)?
+    
+    private var selectedCategory: TodoSections = .work
     
     func config(viewModel: DashboardViewModel) {
         self.viewModel = viewModel
@@ -31,7 +34,36 @@ class AddTodoController: UIViewController {
         handelHeadingText(isEditing: isEditing)
         configureAsSheet()
         styleTextField()
+        setupCategoryPicker()
     }
+    
+    // MARK: Category Picker
+    
+    func setupCategoryPicker() {
+        let actions = TodoSections.allCases
+                .filter { $0 != .all }
+                .map { section in
+                    UIAction(
+                        title: section.rawValue.capitalized,
+                        state: section == selectedCategory ? .on : .off
+                    ) { [weak self] _ in
+                        guard let self = self else { return }
+                        self.selectedCategory = section
+                        self.updateCategoryPickerButtonTitle()
+                        self.setupCategoryPicker()
+                    }
+                }
+        
+        categoryPicker.menu = UIMenu(title: "Select Category", children: actions)
+        categoryPicker.showsMenuAsPrimaryAction = true
+        updateCategoryPickerButtonTitle()
+    }
+    
+    private func updateCategoryPickerButtonTitle() {
+        categoryPicker.setTitle(selectedCategory.rawValue.capitalized, for: .normal)
+    }
+    
+    // MARK: Styling
     
     private func styleTextField() {
         descTextField.borderStyle = .none
@@ -56,6 +88,8 @@ class AddTodoController: UIViewController {
         sheet.preferredCornerRadius = 24
     }
     
+    // MARK: Actions
+    
     @IBAction func saveTodoBtnTap(_ sender: Any) {
         guard let desc = descTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !desc.isEmpty else {
             return
@@ -63,15 +97,18 @@ class AddTodoController: UIViewController {
         
         if let todo = todoToEdit {
             todo.desc = desc
+            todo.category = selectedCategory.rawValue
             viewModel.saveTodo()
         } else {
-            viewModel.createTodo(desc: desc)
+            viewModel.createTodo(desc: desc, category: selectedCategory)
         }
         onSave?()
         dismiss(animated: true)
     }
     
-    private func handelHeadingText(isEditing:Bool) {
+    // MARK: Helpers
+    
+    private func handelHeadingText(isEditing: Bool) {
         if isEditing {
             headingLabel.text = "Edit Todo"
             subHeadingLabel.text = "Edit your task details below"
@@ -83,9 +120,15 @@ class AddTodoController: UIViewController {
         }
     }
     
-    private func populateFieldsIfEditing() -> Bool{
-        guard let todo = todoToEdit else { return false}
+    private func populateFieldsIfEditing() -> Bool {
+        guard let todo = todoToEdit else { return false }
         descTextField.text = todo.desc
+        
+        if let savedCategoryString = todo.category,
+           let categoryEnum = TodoSections(rawValue: savedCategoryString) {
+            selectedCategory = categoryEnum
+        }
+        
         return true
     }
 }

@@ -4,6 +4,7 @@
 //
 //  Created by iPHTech 40 on 19/08/26.
 //
+
 import Combine
 import CoreData
 
@@ -25,7 +26,7 @@ class AuthViewModel: ObservableObject {
             appState.user = user
             return true
         } else {
-            print("boom!, user not found code phat gaya!!!")
+            print("boom!, user not found code phat gya!!!")
             return false
         }
     }

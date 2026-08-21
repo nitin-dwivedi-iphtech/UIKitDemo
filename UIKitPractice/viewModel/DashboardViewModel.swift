@@ -12,29 +12,46 @@ class DashboardViewModel: ObservableObject {
     private var context:NSManagedObjectContext?
     private var appState:AppState
     @Published var todo:[Todo]? = nil
+    @Published var selectedCategory: TodoSections = .all
     
     init(appState:AppState) {
         self.context = CoreDataManager.shared.context
         self.appState = appState
-        fetchUser()
         fetchTodo()
     }
     
     func fetchTodo() {
+        guard let user = appState.user else { return }
         do {
             let request = Todo.fetchRequest()
+            var predicates:[NSPredicate] = []
+            let userFilterPredicate = NSPredicate(format: "user_id == %@",user.id!)
+            if selectedCategory != .all {
+                let categoryPredicate = NSPredicate(format: "category == %@", selectedCategory.rawValue)
+                predicates.append(categoryPredicate)
+            }
+            predicates.append(userFilterPredicate)
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: predicates)
+            request.sortDescriptors = [NSSortDescriptor(key: "id", ascending: true)]
             self.todo = try context?.fetch(request)
         } catch {
             print("error:- \(error)")
         }
     }
     
-    func createTodo(desc: String) {
+    func selectCategory(_ category: TodoSections) {
+        selectedCategory = category
+        fetchTodo()
+    }
+    
+    func createTodo(desc: String, category: TodoSections = .all) {
         guard let context = self.context else { return }
         let todo = Todo(context: context)
         todo.id = UUID().uuidString
         todo.desc = desc
         todo.status = StatusEnum.pending.rawValue
+        todo.category = category.rawValue
+        todo.user_id = appState.user?.id
         context.saveData()
     }
     
@@ -54,16 +71,7 @@ class DashboardViewModel: ObservableObject {
         context.saveData()
         self.todo?.remove(at: index)
     }
-    
-    private func fetchUser() {
-        do {
-            let request = Users.fetchRequest()
-            self.appState.user = try context?.fetch(request).first
-        } catch {
-            print("error:- \(error)")
-        }
-    }
-    
+        
     func signOut() {
         appState.isLoggedIn = false
         appState.user = nil

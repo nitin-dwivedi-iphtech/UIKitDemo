@@ -35,3 +35,12 @@ enum StatusEnum: String, Identifiable, CaseIterable {
         return allCases.first { $0.rawValue == raw.lowercased() }
     }
 }
+
+enum TodoSections: String, Identifiable, CaseIterable {
+    case all = "All"
+    case work = "Work"
+    case personal = "Personal"
+    case shopping = "Shopping"
+    
+    var id: String { self.rawValue }
+}

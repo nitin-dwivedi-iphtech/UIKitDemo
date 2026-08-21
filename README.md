@@ -46,6 +46,11 @@ An iOS Todo app built with UIKit (Storyboard), Combine, and Core Data following 
 - Modal sheet presentation for Add/Edit Todo with grabber and rounded corners
 - Cross-dissolve animated transitions between Auth and Main flows
 
+## Screenshots
+<img width="421" height="864" alt="Screenshot 2026-08-21 at 3 32 54 PM" src="https://github.com/user-attachments/assets/3cb8bebe-8bc3-4632-9223-e6cf1e106721" />
+<img width="416" height="861" alt="Screenshot 2026-08-21 at 3 34 20 PM" src="https://github.com/user-attachments/assets/6f9f05b1-86fe-4a23-929c-6a2fc87d3ea5" />
+
+
 ## Architecture
 
 The app follows the **MVVM (Model-View-ViewModel)** pattern with **Combine** for reactive bindings and **Core Data** for local persistence.
